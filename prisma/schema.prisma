@@ -1,0 +1,63 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id            String         @id 
+  address       String         @unique
+  scannedCodes  ScannedCode[]
+  organization  Organization?  @relation(fields: [orgId], references: [id])
+  orgId         String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+}
+
+model Organization {
+  id          String    @id @default(cuid())
+  name        String
+  description String?
+  owner       String    // wallet address
+  events      Event[]
+  users       User[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Event {
+  id              String    @id @default(cuid())
+  name            String
+  description     String?
+  organization    Organization @relation(fields: [organizationId], references: [id])
+  organizationId  String
+  qrCodes         QRCode[]
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
+
+model QRCode {
+  id            String        @id @default(cuid())
+  title         String
+  url           String
+  imageUrl      String
+  event         Event        @relation(fields: [eventId], references: [id])
+  eventId       String
+  scannedBy     ScannedCode[]
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+}
+
+model ScannedCode {
+  id        String   @id @default(cuid())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  qrCode    QRCode   @relation(fields: [qrCodeId], references: [id])
+  qrCodeId  String
+  scannedAt DateTime @default(now())
+
+  @@unique([userId, qrCodeId])
+}
